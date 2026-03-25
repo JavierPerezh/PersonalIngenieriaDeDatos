@@ -162,8 +162,7 @@ UPDATE articulos
 SET existencias = existencias + 5
 WHERE idArticulo = 7;
 
--- Desactivar modo seguro para actualizaciones masivas
-SET SQL_SAFE_UPDATES = 1;
+-- Desactivar modo seguro 
 SET SQL_SAFE_UPDATES = 0;
 
 -- 6. Aplicar descuento del 10% a un artículo específico
@@ -184,3 +183,19 @@ SELECT * FROM articulos WHERE existencias < 3;
 SET SQL_SAFE_UPDATES = 0;
 DELETE FROM articulos WHERE existencias < 3;
 SET SQL_SAFE_UPDATES = 1;
+
+DESCRIBE articulos;
+
+ALTER TABLE articulos CHANGE COLUMN existencias stoProdT INT;
+ALTER TABLE articulos CHANGE COLUMN tituloArticulo nombreArticulo VARCHAR (120);
+
+SELECT nombreArticulo, stoProdT FROM articulos;
+
+SELECT nombreArticulo AS Nombre_Producto, stoProdT AS stock FROM articulos WHERE stoProdT <= 15 AND idArticulo = 1;
+
+SELECT nombreArticulo AS Nombre_Producto, stoProdT AS stock FROM articulos ORDER BY stoProdT DESC;
+SELECT nombreArticulo AS Nombre_Producto, stoProdT AS stock FROM articulos ORDER BY stoProdT ASC;
+SELECT nombreArticulo AS Nombre_Producto, stoProdT AS stock FROM articulos ORDER BY nombreArticulo DESC;
+SELECT nombreArticulo AS Nombre_Producto, stoProdT AS stock FROM articulos ORDER BY nombreArticulo ASC;
+
+SELECT * FROM articulos WHERE nombreArticulo like '%o';
