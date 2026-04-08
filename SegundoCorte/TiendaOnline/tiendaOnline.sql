@@ -226,3 +226,7 @@ SELECT * FROM productos;
 
 -- Tambien se pueden importar datos usando LOAD DATA INFILE y especificando la tabla con INFO TABLE y restricciones de 
 -- como importar según el tipo de archivo
+
+--Tarea subConsultas
+
+SELECT nombreProducto, precioProducto, FROM productos WHERE PrecioProducto > (SELECT AVG(precioProducto) FROM productos) ORDER BY precioProductos DESC
