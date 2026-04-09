@@ -1,6 +1,3 @@
--- =====================================================
--- LENGUAJE DE MANIPULACIÓN DE DATOS (DML)
--- =====================================================
 -- Author: Javier Pérez
 
 -- -----------------------------------------------------
@@ -213,7 +210,7 @@ SELECT UPPER(nombreProducto) AS Producto_Mayuscula, precioProducto AS Precio FRO
 
 SELECT nombreProducto AS Nombre_Original, SUBSTRING(nombreProducto, 1, 10) AS Nombre_Abreviado FROM productos;
 
-SELECT UPPER(nombreProducto) AS Producto_Mayuscula,ROUND(precioProducto, 0) AS Precio_Redondeado FROM productos 
+SELECT UPPER(nombreProducto) AS Producto_Mayuscula, ROUND(precioProducto, 0) AS Precio_Redondeado FROM productos 
 WHERE precioProducto BETWEEN 100000 AND 700000;
 
 -- Importar datos de csv se hace mediante el Import Wizard de MySQL
@@ -225,8 +222,121 @@ SELECT * FROM pedido;
 SELECT * FROM productos;
 
 -- Tambien se pueden importar datos usando LOAD DATA INFILE y especificando la tabla con INFO TABLE y restricciones de 
--- como importar según el tipo de archivo
 
---Tarea subConsultas
+SELECT * FROM productos GROUP BY categoriaProducto;
 
-SELECT nombreProducto, precioProducto, FROM productos WHERE PrecioProducto > (SELECT AVG(precioProducto) FROM productos) ORDER BY precioProductos DESC
+SELECT categoriaProducto, COUNT(*) AS Cantidad, AVG(precioProducto) AS Promedio 
+FROM productos GROUP BY categoriaProducto HAVING AVG(precioProducto) > 5000 ORDER BY Promedio DESC;
+
+SELECT * FROM clientes ;
+
+-- Subconsultas
+-- Consultas anidadas subQuery
+
+CREATE TABLE departamento(
+	idDepartamento INT PRIMARY KEY AUTO_INCREMENT,
+    nombreDepartamento VARCHAR (50)
+);
+
+CREATE TABLE empleados(
+	idEmpleado INT PRIMARY KEY AUTO_INCREMENT,
+    nombreEmpleado VARCHAR (50) NULL,
+    salario DOUBLE NOT NULL,
+    idDepartamentoFK INT,
+    FOREIGN KEY (idDepartamentoFK) REFERENCES departamento(idDepartamento)
+);
+
+CREATE TABLE producto(
+	idProducto INT PRIMARY KEY AUTO_INCREMENT,
+    nombreProducto VARCHAR (50) NULL,
+    precio DOUBLE NOT NULL,
+    categoria VARCHAR (50) NOT NULL
+);
+
+INSERT INTO departamento(nombreDepartamento)
+VALUES ('Departamento A'), ('Departamento B'), ('Departamento C');
+
+INSERT INTO empleados(nombreEmpleado, salario, idDepartamentoFK)
+VALUES ('Javier Pérez', 8, 1), ('Juan Zamudio', 2, 2), ('Tatiana Cabrera', 10, 3);
+
+INSERT INTO producto(nombreProducto, precio, categoria)
+VALUES ('Producto A', 3, 'A'), ('Producto B', 4, 'B'), ('Producto C', 2, 'C');
+
+-- Subconsultas
+
+SELECT nombreEmpleado, salario FROM empleados WHERE salario > (SELECT AVG(salario) FROM empleados);
+
+SELECT nombreEmpleado, salario FROM empleados 
+WHERE idDepartamentoFK IN (SELECT idDepartamento FROM departamento WHERE nombreDepartamento IN ('Departamento A', 'Departamento B'));
+
+SELECT idDepartamentoFK, promedioSalarios FROM (SELECT idDepartamentoFK, AVG(salario) AS promedioSalarios FROM empleados GROUP BY idDepartamentoFK) AS promedios 
+WHERE promedioSalarios > 1;
+
+DESCRIBE empleados;
+
+-- Categoria y precio maximo de los productos, y el producto cuyo precio sea mayor que el del promedio. 
+
+SELECT * FROM producto;
+
+SELECT AVG(precio) FROM producto;
+
+SELECT nombreProducto, precio FROM producto WHERE precio > (SELECT AVG(precio) FROM producto) ORDER BY precio DESC;
+
+SELECT nombreEmpleado, salario, (SELECT AVG(salario) FROM empleados) AS promedioSalarios, salario - (SELECT AVG(salario) FROM empleados) AS diferencia 
+FROM empleados;
+
+CREATE TABLE pedidos(
+	idPedido INT PRIMARY KEY AUTO_INCREMENT,
+    idCliente INT NOT NULL,
+    fechaPedido DATETIME DEFAULT NOW(),
+    estado ENUM('pendiente', 'enviado', 'entregado', 'cancelado') NOT NULL,
+	total DECIMAL(12,2) DEFAULT 0,
+    FOREIGN KEY (idCliente) REFERENCES clientes(idCliente)
+);
+
+CREATE TABLE detallePedido (
+	idDetalle	INT AUTO_INCREMENT PRIMARY KEY,
+    idPedido	INT NOT NULL,
+    idProducto 	INT NOT NULL,
+    cantidad	INT NOT NULL,
+    precioUnit	DECIMAL(10,2) NOT NULL,
+	FOREIGN KEY (idPedido) 	REFERENCES pedidos(idPedido),
+    FOREIGN KEY (idProducto) REFERENCES producto(idProducto)
+);
+
+
+INSERT INTO pedidos (idCliente, fechaPedido, estado, total) VALUES
+(1, '2026-04-01 10:30:00', 'entregado', 1250000),
+(2, '2026-04-05 14:15:00', 'enviado', 720000),
+(1, '2026-04-08 09:45:00', 'pendiente', 255000),
+(1, '2026-04-10 16:20:00', 'entregado', 680000),
+(2, '2026-04-12 11:00:00', 'cancelado', 210000);
+
+
+INSERT INTO detallePedido (idPedido, idProducto, cantidad, precioUnit) VALUES
+(1, 1, 1, 1250000),
+(2, 2, 1, 720000),
+(3, 3, 1, 210000),
+(3, 2, 1, 45000),
+(4, 3, 1, 680000),
+(5, 1, 1, 210000);
+
+SELECT 
+    p.idPedido,
+    c.nombreCliente,
+    c.emailCliente,
+    p.fechaPedido,
+    p.estado,
+    p.total AS totalPedido,
+    pr.nombreProducto,
+    dp.cantidad,
+    dp.precioUnit,
+    (dp.cantidad * dp.precioUnit) AS subtotal
+FROM pedidos p
+INNER JOIN clientes c ON p.idCliente = c.idCliente
+INNER JOIN detallePedido dp ON p.idPedido = dp.idPedido
+INNER JOIN producto pr ON dp.idProducto = pr.idProducto
+ORDER BY p.idPedido, dp.idDetalle;
+
+USE tiendaonline;
+
