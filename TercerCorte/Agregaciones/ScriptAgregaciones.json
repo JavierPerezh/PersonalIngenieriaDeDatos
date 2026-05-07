@@ -1,0 +1,206 @@
+db.corredores.aggregate([
+  {
+    $addFields: {
+      totalMinutos: { $sum: "$recorridos.minutos" },
+      totalKilometros: { $sum: "$recorridos.km" },
+      nombreCompleto: { $concat: ["$nombre", " ", "$apellido"] }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      nombreCompleto: 1,
+      totalMinutos: 1,
+      totalKilometros: 1
+    }
+  }
+])
+{
+  totalMinutos: 208,
+  totalKilometros: 32.7,
+  nombreCompleto: 'Juan Pérez'
+}
+{
+  totalMinutos: 216,
+  totalKilometros: 31.2,
+  nombreCompleto: 'María Gómez'
+}
+{
+  totalMinutos: 334,
+  totalKilometros: 54.2,
+  nombreCompleto: 'Carlos López'
+}
+{
+  totalMinutos: 164,
+  totalKilometros: 22.4,
+  nombreCompleto: 'Ana Martínez'
+}
+db.corredores.aggregate([
+  { $unwind: "$recorridos" },
+  {
+    $addFields: {
+      mes: { $month: { $dateFromString: { dateString: "$recorridos.fecha" } } },
+      año: { $year: { $dateFromString: { dateString: "$recorridos.fecha" } } },
+      nombreCompleto: { $concat: ["$nombre", " ", "$apellido"] }
+    }
+  },
+  {
+    $group: {
+      _id: {
+        corredor: "$nombreCompleto",
+        año: "$año",
+        mes: "$mes"
+      },
+      promedioMinutos: { $avg: "$recorridos.minutos" }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      corredor: "$_id.corredor",
+      año: "$_id.año",
+      mes: "$_id.mes",
+      promedioMinutos: { $round: ["$promedioMinutos", 2] }
+    }
+  },
+  { $sort: { corredor: 1, año: 1, mes: 1 } }
+])
+{
+  corredor: 'Ana Martínez',
+  'año': 2025,
+  mes: 1,
+  promedioMinutos: 23.67
+}
+{
+  corredor: 'Ana Martínez',
+  'año': 2025,
+  mes: 2,
+  promedioMinutos: 31
+}
+{
+  corredor: 'Carlos López',
+  'año': 2025,
+  mes: 1,
+  promedioMinutos: 53
+}
+{
+  corredor: 'Carlos López',
+  'año': 2025,
+  mes: 2,
+  promedioMinutos: 58.33
+}
+{
+  corredor: 'Juan Pérez',
+  'año': 2025,
+  mes: 1,
+  promedioMinutos: 33.33
+}
+{
+  corredor: 'Juan Pérez',
+  'año': 2025,
+  mes: 2,
+  promedioMinutos: 36
+}
+{
+  corredor: 'María Gómez',
+  'año': 2025,
+  mes: 1,
+  promedioMinutos: 29.33
+}
+{
+  corredor: 'María Gómez',
+  'año': 2025,
+  mes: 2,
+  promedioMinutos: 42.67
+}
+db.corredores.aggregate([
+  { $unwind: "$recorridos" },
+  {
+    $addFields: {
+      mes: { $month: { $dateFromString: { dateString: "$recorridos.fecha" } } },
+      año: { $year: { $dateFromString: { dateString: "$recorridos.fecha" } } },
+      nombreCompleto: { $concat: ["$nombre", " ", "$apellido"] }
+    }
+  },
+  {
+    $group: {
+      _id: {
+        corredor: "$nombreCompleto",
+        año: "$año",
+        mes: "$mes"
+      },
+      promedioKilometros: { $avg: "$recorridos.km" }
+    }
+  },
+  { $match: { promedioKilometros: { $gt: 5 } } },
+  {
+    $project: {
+      _id: 0,
+      corredor: "$_id.corredor",
+      año: "$_id.año",
+      mes: "$_id.mes",
+      promedioKilometros: { $round: ["$promedioKilometros", 2] }
+    }
+  },
+  { $sort: { corredor: 1, año: 1, mes: 1 } }
+])
+{
+  corredor: 'Carlos López',
+  'año': 2025,
+  mes: 1,
+  promedioKilometros: 8.57
+}
+{
+  corredor: 'Carlos López',
+  'año': 2025,
+  mes: 2,
+  promedioKilometros: 9.5
+}
+{
+  corredor: 'Juan Pérez',
+  'año': 2025,
+  mes: 1,
+  promedioKilometros: 5.23
+}
+{
+  corredor: 'Juan Pérez',
+  'año': 2025,
+  mes: 2,
+  promedioKilometros: 5.67
+}
+{
+  corredor: 'María Gómez',
+  'año': 2025,
+  mes: 2,
+  promedioKilometros: 6.23
+}
+db.corredores.aggregate([
+  { $unwind: "$recorridos" },
+  {
+    $addFields: {
+      mes: { $month: { $dateFromString: { dateString: "$recorridos.fecha" } } },
+      año: { $year: { $dateFromString: { dateString: "$recorridos.fecha" } } },
+      nombreCompleto: { $concat: ["$nombre", " ", "$apellido"] }
+    }
+  },
+  {
+    $group: {
+      _id: {
+        corredor: "$nombreCompleto",
+        año: "$año",
+        mes: "$mes"
+      },
+      totalKilometros: { $sum: "$recorridos.km" }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      corredor: "$_id.corredor",
+      año: "$_id.año",
+      mes: "$_id.mes",
+      totalKilometros: { $round: ["$totalKilometros", 2] }
+    }
+  },
+  { $sort: { mes: 1 } }
+])
